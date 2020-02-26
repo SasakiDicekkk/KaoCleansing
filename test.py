@@ -1,11 +1,13 @@
 import glob
 import sys
 import re
+import os
 
-# data = glob.glob(r"D:\ceremony\txt_test/*.txt")
-data = glob.glob(r"D:\ceremony\txt_honban/*.txt")
+# data = glob.glob(r"D:\120event\txt_test/*.txt")
+data = glob.glob(r"D:\120event\export\txt_readable/*.txt")
+savePath = r'D:\\Coding\KaoCleansing\txt_edited'
 
-fw = open("gyou.txt", "w")
+# fw = open("gyou.txt", "w")
 
 #ファイル名を職員番号にする
 def numberNS(n):
@@ -14,71 +16,47 @@ def numberNS(n):
     nn = mo.group()
     return nn
 
-def containedgenzai(f):
-    gen_regex = re.compile(r'\現在|\現 在|\現  在|\現　在')
-    # gen_regex = re.compile(r'\現.*在')
-    mo = gen_regex.search(f)
-    mo == True
-    if mo:
-        print(len(mo.group()))
-    return mo
-    # delSpace = f.replace(("　"), "")
-    # if ('現在' in delSpace) or ('現 在' in delSpace):
-    #     return True
+def saveedittext(n, r, count):
+    kaoFile = open( savePath + "\\" + str(n) +'.txt', 'w')
+    for j in range(count + 1, len(r)):
+        kaoFile.write(r[j])
+    kaoFile.close()
 
-count = 0
+noGenzaiList = []
+# ファイルの数だけ処理を実行
 for file in data:
-
-    f = open(file, "r")
-
-    #ファイル名から職員番号を抽出
+    # ファイル名から職員番号を抽出
     syokuinNumber = numberNS(file)
-
-    fw.write(syokuinNumber)
-    
     print("----------職員番号は「{0}」です----------".format(syokuinNumber))
 
-    fdata = f.read()  #ファイル終端まで読んだデータを返す
-    boolGenzai = containedgenzai(fdata)
-    #print(boolGenzai)
-    if not boolGenzai:
-        print("---{0}は現在が含まれていません---".format(syokuinNumber))
-        count += 1
+    # 一行ずつ読み込む処理
+    f = open(file, "r")
+    lines = f.readlines()
+    count = 0
+    gyou = []
+    for i in range(len(lines)):
+        gen_regex = re.compile(r'\現在|\現 在|\現  在|\現　在')
+        findText = gen_regex.findall(lines[i])
+        if findText:
+            # print(findText)
+            count += 1
+            gyou.append(i)
+   
+    # 現在のカウント数の判定
+    if count == 0:
+        print("この文には現在という単語が含まれていません")
+        noGenzaiList.append(syokuinNumber)
+    elif count == 1:
+        # print("正常")
+        saveedittext(syokuinNumber, lines, gyou[0])
+    else:
+        # pc = ("この文章には現在という単語が「{0}」個含まれています。").format(len(gyou))
+        saveedittext(syokuinNumber, lines, gyou[0])
+        # print(pc)
+        # print(gyou)
+    f.close()
 
-    # lines = fdata.split("\n")
-    # f.close()
+print(noGenzaiList)
+# print("---終了。現在が異常検出された職員番号の総数は{0}個です---".format(count))
 
-
-    #print("----------改行数は{0}です----------".format(len(lines1)))
-    # noGenzai = []
-    # for i in range(len(lines)):
-    #     editText = lines[i].replace("　", "")
-    #     if (("現 在") in editText) or (("現在") in editText) or (("現  在") in editText):
-    #         noGenzai.append(i)
-    #         break
-
-        #     print(editText)
-        # else:
-        #     print("aru")
-        # print("---区切り---")
-        # print(line)
-        # if (len(line) > 2):  #文字列が数値より大きいとき
-        #     countLength = len(editText)
-        #     scountLength = str(countLength)
-        #     #print(countLength)
-        #     fw.write(scountLength + ",")
-        #     #print(editText)
-        #     if (line.find("現在") == True):
-        #         print(line)
-        #         # print(line)
-
-    # try:
-    #     if noGenzai[-1] == 0:
-    #         print("現在がない職員番号は「{0}」です".format(syokuinNumber))
-    # except IndexError:
-    #     print("現在がない職員番号は「{0}」です".format(syokuinNumber))
-    fw.write("\n")
-
-print("---現在が含まれていない職員番号の総数は{0}個です---".format(count))
-
-fw.close()
+# fw.close()
